@@ -12,6 +12,7 @@ void timer_setup() {
     rcc_periph_clock_enable(RCC_GPIOC);
     rcc_periph_clock_enable(RCC_GPIOB);
     rcc_periph_clock_enable(RCC_SPI1);
+    rcc_periph_clock_enable(RCC_SPI2);
 }
 
 // Настройка радиомодуля NRF24L01
@@ -55,6 +56,24 @@ void setup_ER45 () {
     gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO1 | GPIO3);
     // AUX
     gpio_mode_setup(GPIOD, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO0);
+}
+
+// Настройка связи с другими модулями
+void timer_setup() {
+    // Настройка SPI для радиомодуля (MISO - PC2, MOSI - PC3, SCK - PB10, SS - PB12)
+
+    gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_16_MHZ,
+        GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO2 | GPIO3 );
+    gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_16_MHZ,
+        GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO10);
+
+    gpio_set_mode(GPIOB, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT,
+        GPIO12);
+    // МК в Master
+    spi_init_master(SPI2, SPI_CR1_BAUDRATE_FPCLK_DIV_64, SPI_CR1_CPOL_CLK_TO_1_WHEN_IDLE,
+        SPI_CR1_CPHA_CLK_TRANSITION_2, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
+
+    spi_enable(SPI2);
 }
 
 //Настройка клавиатуры
