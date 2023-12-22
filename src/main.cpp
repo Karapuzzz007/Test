@@ -44,7 +44,7 @@ void setup_NRF24L01() {
     spi_enable(SPI1);
 }
 
-//Настройка радиоиодуля E45-ttl-1w
+//Настройка радиомодуля E45-ttl-1w
 void setup_ER45(){
 
     gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2);
