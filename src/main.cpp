@@ -5,52 +5,64 @@
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/usart.h>
 
-// Настройка таймера
-void timer_setup() {
+#include <libopencm3/cm3/nvic.h>
+
+
+// РќР°СЃС‚СЂРѕР№РєР° С‚Р°Р№РјРµСЂР°
+void time_setup() {
+
     rcc_periph_clock_enable(RCC_GPIOD);
     rcc_periph_clock_enable(RCC_GPIOE);
     rcc_periph_clock_enable(RCC_GPIOC);
     rcc_periph_clock_enable(RCC_GPIOB);
+    rcc_periph_clock_enable(RCC_GPIOA);
+
     rcc_periph_clock_enable(RCC_SPI1);
     rcc_periph_clock_enable(RCC_SPI2);
+    rcc_periph_clock_enable(RCC_UART5);
+    
 }
 
-// Настройка радиомодуля NRF24L01
+// РќР°СЃС‚СЂРѕР№РєР° СЂР°РґРёРѕРјРѕРґСѓР»СЊ NRF24L01
 void setup_NRF24L01() {
-
 
     // CE
     gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO5); 
     // IRQ
     gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO4); 
-    // Настройка SPI для радиомодуля (MISO - PA6, MOSI - PA7, SCK - PA5, CSN - PA4)
+    // РќР°СЃС‚СЂРѕР№РєР° SPI РґР»СЏ СЂР°РґРёРѕРјРѕРґСѓР»СЏ (MISO - PA6, MOSI - PA7, SCK - PA5, CSN - PA4)
  
-    gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_16_MHZ,
-        GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO4 | GPIO5 | GPIO7);
+    gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT,
+        GPIO_MODE_OUTPUT, GPIO4 | GPIO5 | GPIO7);
 
-    gpio_set_mode(GPIOA, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT,
+    gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE,
         GPIO6);
-    // МК в Master
+    // РњРљ РІ Master
     spi_init_master(SPI1, SPI_CR1_BAUDRATE_FPCLK_DIV_64, SPI_CR1_CPOL_CLK_TO_1_WHEN_IDLE,
         SPI_CR1_CPHA_CLK_TRANSITION_2, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);                  
 
     spi_enable(SPI1);
 }
 
-// Настройка радиомодуля E45-ttl-1w
-void setup_ER45 () {
+//РќР°СЃС‚СЂРѕР№РєР° СЂР°РґРёРѕРёРѕРґСѓР»СЏ E45-ttl-1w
+void setup_ER45(){
 
-    gpio_set_mode(GPIOD, GPIO_MODE_OUTPUT_16_MHZ,
-        GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO_UART5_TX);
-    gpio_set_mode(GPIOC, GPIO_MODE_INPUT,
-        GPIO_CNF_INPUT_FLOAT, GPIO_UART5_RX);
+    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2);
 
-    usart_set_baudrate(UART5, 115200);
-    usart_set_databits(UART5, 8);
-    usart_set_stopbits(UART5, USART_STOPBITS_1);
-    usart_set_mode(UART5, USART_MODE_TX_RX);
-    usart_set_parity(UART5, USART_PARITY_NONE);
-    usart_set_flow_control(UART5, USART_FLOWCONTROL_NONE);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO3);
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, GPIO3);
+
+	gpio_set_af(GPIOA, GPIO_AF7, GPIO2);
+	gpio_set_af(GPIOA, GPIO_AF7, GPIO3);
+
+	usart_set_baudrate(UART5, 115200);
+	usart_set_databits(UART5, 8);
+	usart_set_stopbits(UART5, USART_STOPBITS_1);
+	usart_set_mode(UART5, USART_MODE_TX_RX);
+	usart_set_parity(UART5, USART_PARITY_NONE);
+	usart_set_flow_control(UART5, USART_FLOWCONTROL_NONE);
+
+    usart_enable(UART5);
 
     // M0, M1
     gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO1 | GPIO3);
@@ -58,31 +70,32 @@ void setup_ER45 () {
     gpio_mode_setup(GPIOD, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO0);
 }
 
-// Настройка связи с другими модулями
-void timer_setup() {
-    // Настройка SPI для радиомодуля (MISO - PC2, MOSI - PC3, SCK - PB10, SS - PB12)
+// РќР°СЃС‚РѕСЂРѕР№РєР° СЃРІСЏР·Рё СЃ РґСЂСѓРіРёРјРё РјРѕРґСѓР»СЏРјРё
+void other_devices() {
+    // РќРђСЃС‚СЂРѕР№РєР° SPI (MISO - PC2, MOSI - PC3, SCK - PB10, SS - PB12)
 
-    gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_16_MHZ,
-        GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO2 | GPIO3 );
-    gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_16_MHZ,
-        GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO10);
+    gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT,
+        GPIO_PUPD_NONE, GPIO2 | GPIO3 );
+    gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT,
+       GPIO_PUPD_NONE, GPIO10);
 
-    gpio_set_mode(GPIOB, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT,
+    gpio_mode_setup(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_NONE,
         GPIO12);
-    // МК в Master
+    // РњРљ РІ Master
     spi_init_master(SPI2, SPI_CR1_BAUDRATE_FPCLK_DIV_64, SPI_CR1_CPOL_CLK_TO_1_WHEN_IDLE,
         SPI_CR1_CPHA_CLK_TRANSITION_2, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
 
     spi_enable(SPI2);
 }
 
-//Настройка клавиатуры
+//РќР°СЃС‚СЂРѕР№РєР° РєР»Р°РІРёР°С‚СѓСЂС‹
 void setup_keyboard() {
     gpio_mode_setup(GPIOD, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO14 | GPIO13 | GPIO12 | GPIO10 | GPIO9 | GPIO8);
     gpio_mode_setup(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO13 | GPIO11);
 }
 
-//Настройка светодиода
+
+// РќР°СЃС‚СЂРѕР№РєР° СЃРІРµС‚РѕРґРёРѕРґР°
 void setup_led() {
     gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO2);
 }
